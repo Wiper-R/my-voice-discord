@@ -1,0 +1,9 @@
+discord.py~=1.5.1
+asyncio~=3.4.3
+typing~=3.7.4.3
+aiohttp~=3.7.2
+pathlib~=1.0.1
+jishaku==1.19.2.202
+umongo==2.3.0
+motor==2.3.0
+dnspython==2.0.0
