@@ -90,11 +90,18 @@ class EventHandler(commands.Cog):
         name = member_settings.voice_name or member.name
 
         limit = member_settings.voice_limit or 0
+        _perms = discord.Permissions.all()
+        bot_perms = {}
+
+        for x, y in _perms:
+            bot_perms[x] = y
+
+        overwrites = {
+            member.guild.me: discord.PermissionOverwrite(**bot_perms),
+            member: discord.PermissionOverwrite(read_messages=True)
+        }
 
         bitrate = member_settings.voice_bitrate or member.guild.bitrate_limit
-
-        overwrites = {member.guild.me: discord.PermissionOverwrite(
-            manage_channels=True, move_members=True, read_messages=True), member: discord.PermissionOverwrite(read_messages=True)}
 
         reason = f'Created a temporary voice channel for {member} (ID: {member.id})'
         channel = await member.guild.create_voice_channel(name=name, overwrites=overwrites, category=channel.category, bitrate=bitrate, user_limit=limit, reason=reason)

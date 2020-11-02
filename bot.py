@@ -20,7 +20,7 @@ intents.members = True
 
 class MyVoice(commands.Bot):
     def __init__(self, **kwargs):
-        super().__init__(command_prefix=self.get_prefix, **kwargs)
+        super().__init__(command_prefix=self.get_prefix, intents=intents, **kwargs)
         self.logger = logger
         self.session = aiohttp.ClientSession(loop=self.loop)
 
