@@ -55,7 +55,7 @@ class Voice(commands.Cog):
         if isinstance(error, commands.CommandOnCooldown):
             return await ctx.send(error)
 
-        if ctx.command is not None:
+        if ctx.command is not None and ctx.command.is_on_cooldown(ctx):
             await ctx.command.reset_cooldown(ctx)
 
         if isinstance(error, send_back):
