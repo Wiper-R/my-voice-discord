@@ -19,7 +19,7 @@ def has_a_channel():
             raise NoVoiceChannel(
                 'You must be in voice channel to use this command.')
 
-        vc = await db.fetch_vc(ctx.author.voice.channel)
+        vc = await db.fetch_vc(ctx.author.voice.channel.id)
 
         if not vc:
             raise NoVoiceChannel("This is not a temporary voice channel.")
@@ -103,7 +103,7 @@ class Voice(commands.Cog):
     async def voice_name(self, ctx: commands.Context, *, name: str):
         await ctx.author.voice.channel.edit(name=name)
         await ctx.send(f"You successfully changed channel name to '{name}'")
-        await self.db.update_member(ctx.author, {"$set": {'voice_name': name}})
+        await self.db.update_member(ctx.author.id, {"$set": {'voice_name': name}})
 
     @voice.command(name='bitrate')
     @has_a_channel()
@@ -116,7 +116,7 @@ class Voice(commands.Cog):
         bitrate *= 1000
         await ctx.author.voice.channel.edit(bitrate=bitrate)
         await ctx.channel.send(f'{ctx.author.mention} You have changed the bit-rate of this channel. 🔊')
-        await self.db.update_member(ctx.author, {"$set": {'voice_bitrate': bitrate}})
+        await self.db.update_member(ctx.author.id, {"$set": {'voice_bitrate': bitrate}})
 
     @voice.command(name='lock')
     @has_a_channel()
@@ -232,7 +232,7 @@ class Voice(commands.Cog):
             return await ctx.send("This is already limit of your voice channel.")
         await channel.edit(user_limit=limit)
         await ctx.channel.send(f'{ctx.author.mention} You have set the channel limit to be {limit}!')
-        await self.db.update_member(ctx.author, {"$set": {"voice_limit": limit}})
+        await self.db.update_member(ctx.author.id, {"$set": {"voice_limit": limit}})
 
     @voice.command(name='claim')
     async def voice_claim(self, ctx):
@@ -242,7 +242,7 @@ class Voice(commands.Cog):
         if ctx.author.voice is None:
             return await ctx.send("You are not in any voice channel.")
         channel = ctx.author.voice.channel
-        vc = await self.db.fetch_vc(channel)
+        vc = await self.db.fetch_vc(channel.id)
         if vc is None:
             return await ctx.send("You can't claim that channel.")
 
@@ -253,7 +253,7 @@ class Voice(commands.Cog):
             return await ctx.send(f"This channel is already owned by {owner}")
 
         await self.bot.mongo.db.voice_channel.update_one({'_id': channel.id}, {"$set": {"owner": ctx.author.id}})
-
+        self.db.fetch_vc.invalidate(channel.id)
         await ctx.send("Successfully transferred channel ownership to you.")
 
     @voice.command(name='game')
@@ -286,4 +286,5 @@ class Voice(commands.Cog):
         if member not in channel.members:
             return await ctx.send(f"{member} should be in voice.")
         await self.bot.mongo.db.voice_channel.update_one({'_id': channel.id}, {"$set": {'owner': member.id}})
+        self.db.fetch_vc.invalidate(channel.id)
         await ctx.send(f'Successfully transferred channel ownership to {member}.')

@@ -32,7 +32,7 @@ class EventHandler(commands.Cog):
 
     @commands.Cog.listener()
     async def on_channel_join(self, member: discord.Member, after: discord.VoiceState):
-        guilds = await self.db.fetch_guilds(member.guild)
+        guilds = await self.db.fetch_guilds(member.guild.id)
 
         if not guilds:
             return
@@ -59,7 +59,7 @@ class EventHandler(commands.Cog):
 
     @commands.Cog.listener()
     async def on_channel_left(self, member: discord.Member, before: discord.VoiceState):
-        voice_channel = await self.bot.mongo.VoiceChannel.find_one({'id': before.channel.id})
+        voice_channel = await self.db.fetch_vc(before.channel.id)
         if not voice_channel:
             return
 
@@ -67,6 +67,7 @@ class EventHandler(commands.Cog):
             return
 
         await self.bot.mongo.db.voice_channel.delete_one({'id': before.channel.id})
+        self.db.fetch_vc.invalidate(before.channel.id)
 
         if voice_channel.type in [1, 3]:
             self.bot.dispatch(
@@ -82,11 +83,12 @@ class EventHandler(commands.Cog):
 
     @commands.Cog.listener()
     async def on_normal_channel_join(self, member: discord.Member, channel: discord.VoiceChannel):
-        member_settings = await self.db.fetch_member(member)
+        member_settings = await self.db.fetch_member(member.id)
 
         if not member_settings:
             member_settings = self.bot.mongo.Member(id=member.id)
             await member_settings.commit()
+            self.db.fetch_member.invalidate(member.id)
         name = member_settings.voice_name or member.name
 
         limit = member_settings.voice_limit or 0
