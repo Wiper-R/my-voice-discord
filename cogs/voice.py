@@ -81,7 +81,7 @@ class Voice(commands.Cog):
         channel = await ctx.guild.create_voice_channel('Join To Create', category=category, overwrites=overwrites)
 
         await self.bot.mongo.Guild(guild_id=ctx.guild.id, channel=channel.id, type=1).commit()
-
+        self.db.fetch_guilds.invalidate(ctx.guild.id)
         return await ctx.send("Successfully created a channel. You can now rename it or do what ever you want.")
 
     @voice_setup.command(name='predefined')
@@ -95,6 +95,7 @@ class Voice(commands.Cog):
         channel = await ctx.guild.create_voice_channel('(Change Me)', category=category, overwrites=overwrites)
 
         await self.bot.mongo.Guild(guild_id=ctx.guild.id, channel=channel.id, type=3).commit()
+        self.db.fetch_guilds.invalidate(ctx.guild.id)
         return await ctx.send("Successfully created a channel. You can now rename it or do what ever you want.")
 
     @voice.command(name='name')
