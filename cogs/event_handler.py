@@ -24,6 +24,10 @@ class EventHandler(commands.Cog):
         return self.bot.get_cog('Database')
 
     @commands.Cog.listener()
+    async def on_guild_channel_delete(self, channel):
+        self.db.fetch_vc.invalidate(channel.id)
+
+    @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
         if after.channel:
             self.bot.dispatch('channel_join', member, after)
@@ -67,7 +71,6 @@ class EventHandler(commands.Cog):
             return
 
         await self.bot.mongo.db.voice_channel.delete_one({'id': before.channel.id})
-        self.db.fetch_vc.invalidate(before.channel.id)
 
         if voice_channel.type in [1, 3]:
             self.bot.dispatch(
