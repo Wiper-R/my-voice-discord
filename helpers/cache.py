@@ -58,20 +58,21 @@ def cache(maxsize=128, typed_cache=False):
             _key = _make_key(_args, kwargs, typed_cache)
             value = _internal_cache.get(_key)
 
-            if not value:
+            try:
+                value = _internal_cache[_key]
+                _stats.hits += 1
+                if inspect.iscoroutinefunction(func):
+                    return _wrap_new_coroutine(value)
+
+                return value
+
+            except KeyError:
                 _stats.missed += 1
                 value = func(*args, **kwargs)
                 if inspect.isawaitable(value):
                     return _wrap_and_store_key(_internal_cache, _key, value)
 
                 _internal_cache[_key] = value
-                return value
-
-            else:
-                _stats.hits += 1
-                if inspect.iscoroutinefunction(func):
-                    return _wrap_new_coroutine(value)
-
                 return value
 
         def _invalidate(*args, **kwargs):
