@@ -54,7 +54,7 @@ def cache(maxsize=128, typed_cache=False):
         @ wraps(func)
         def wrapper(*args, **kwargs):
             # I have to ignore self i.e. commands.Cog instance
-            _args = [arg for arg in args if 'cogs' not in repr(arg)]
+            _args = tuple([arg for arg in args if 'cogs' not in repr(arg)])
             _key = _make_key(_args, kwargs, typed_cache)
             value = _internal_cache.get(_key)
 
