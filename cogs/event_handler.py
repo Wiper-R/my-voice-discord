@@ -16,8 +16,30 @@ class EventHandler(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.bot.help_command = MyHelpCommand()
-        self.error_webhook = Webhook.get(
-            'https://discord.com/api/webhooks/772023679693488159/n9JNw6NFlE5MfdXbfBNAUu7LmEW5mVfSB7Q7CahOnzKS5G8ugs8hlKq7EZwuZFdfQ44c', bot.session)
+
+        self.error_webhook = discord.Webhook.from_url('https://discord.com/api/webhooks/772023679693488159/n9JNw6NFlE5MfdXbfBNAUu7LmEW5mVfSB7Q7CahOnzKS5G8ugs8hlKq7EZwuZFdfQ44c',
+                                                      adapter=discord.AsyncWebhookAdapter(session=bot.session))
+
+        self.bot.loop.create_task(self.remover())
+
+        self.voice_cooldowns = dict()
+
+    async def _safe_send(self, member: discord.Member, message: str):
+        try:
+            return await member.send(content=message)
+        except (discord.Forbidden, discord.HTTPException):
+            return None
+
+    def is_on_cooldown(self, member: discord.Member):
+        now = datetime.datetime.utcnow()
+        try:
+            return self.voice_cooldowns[member.id] > now, (self.voice_cooldowns[member.id] - now).total_seconds()
+        except KeyError:
+            return False, None
+
+    def _do_cooldown(self, member: discord.Member, time: float = 30):
+        self.voice_cooldowns[member.id] = datetime.datetime.utcnow(
+        ) + datetime.timedelta(seconds=time)
 
     @property
     def db(self) -> Database:
@@ -36,6 +58,8 @@ class EventHandler(commands.Cog):
 
     @commands.Cog.listener()
     async def on_channel_join(self, member: discord.Member, after: discord.VoiceState):
+        cooldown, try_after = self.is_on_cooldown(member)
+
         guilds = await self.db.fetch_guilds(member.guild.id)
 
         if not guilds:
@@ -47,6 +71,10 @@ class EventHandler(commands.Cog):
         for channel in guilds:
             if channel.channel != after.channel.id:
                 continue
+
+            if cooldown:
+                message = f"You are on cooldown. Try again in {try_after:.2f}s"
+                return await self._safe_send(member, message)
 
             if channel.type == 1:
                 self.bot.dispatch('normal_channel_join', member, after.channel)
@@ -61,6 +89,8 @@ class EventHandler(commands.Cog):
                     'predefined_channel_join',
                     member, after.channel)
 
+            self._do_cooldown(member, 20)
+
     @commands.Cog.listener()
     async def on_channel_left(self, member: discord.Member, before: discord.VoiceState):
         voice_channel = await self.db.fetch_vc(before.channel.id)
@@ -70,7 +100,7 @@ class EventHandler(commands.Cog):
         if len(before.channel.members):
             return
 
-        await self.bot.mongo.db.voice_channel.delete_one({'id': before.channel.id})
+        await self.bot.mongo.db.voice_channel.delete_one({'_id': before.channel.id})
 
         if voice_channel.type in [1, 3]:
             self.bot.dispatch(
@@ -86,6 +116,7 @@ class EventHandler(commands.Cog):
 
     @commands.Cog.listener()
     async def on_normal_channel_join(self, member: discord.Member, channel: discord.VoiceChannel):
+
         member_settings = await self.db.fetch_member(member.id)
 
         if not member_settings:
@@ -156,3 +187,20 @@ class EventHandler(commands.Cog):
         e.description = f'```py\n{exc}\n```'
         e.timestamp = datetime.datetime.utcnow()
         await self.error_webhook.send(embed=e, username=f'{self.bot.user.name} Errors', avatar_url=self.bot.user.avatar_url)
+
+    async def remover(self):
+        await self.bot.wait_until_ready()
+        blk_delete = []
+        async for channel in self.bot.mongo.db.voice_channel.find():
+            ch = self.bot.get_channel(channel['_id'])
+            if not ch:
+                blk_delete.append(channel)
+            else:
+                try:
+                    await ch.delete()
+                except discord.Forbidden:
+                    ...
+                finally:
+                    blk_delete.append(channel)
+
+        await self.bot.mongo.db.voice_channel.delete_many({'_id': {"$in": [ch['_id'] for ch in blk_delete]}})
