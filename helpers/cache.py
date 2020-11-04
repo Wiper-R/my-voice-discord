@@ -105,36 +105,36 @@ def cache(maxsize=128, typed_cache=False):
 
     return decorator
 
+if __name__ == '__main__':
+    import aiohttp
+    import asyncio
+    import time
 
-# import aiohttp
-# import asyncio
-# import time
+    uri = 'https://nekobot.xyz/api/imagegen?type=clyde&text=This%20is%20Text'
+    uri2 = 'https://nekobot.xyz/api/imagegen?type=clyde&text=This%20is%20Tex'
 
-# uri = 'https://nekobot.xyz/api/imagegen?type=clyde&text=This%20is%20Text'
-# uri2 = 'https://nekobot.xyz/api/imagegen?type=clyde&text=This%20is%20Tex'
+    session = aiohttp.ClientSession()
 
-# session = aiohttp.ClientSession()
-
-# loop = asyncio.get_event_loop()
-
-
-# @ cache(0)
-# async def _make_request(uri):
-#     res = await session.get(uri)
-#     data = await res.json()
-#     return data['message']
+    loop = asyncio.get_event_loop()
 
 
-# t = time.time()
+    @cache(0)
+    async def _make_request(uri):
+        res = await session.get(uri)
+        data = await res.json()
+        return data['message']
 
 
-# async def main():
-#     for _ in range(10):
-#         await _make_request(uri)
-#         await _make_request(uri2)
+    t = time.time()
 
-# loop.run_until_complete(main())
 
-# print(time.time() - t)
+    async def main():
+        for _ in range(10):
+            await _make_request(uri)
+            await _make_request(uri2)
 
-# print(_make_request.get_info())
+    loop.run_until_complete(main())
+
+    print(time.time() - t)
+
+    print(_make_request.get_info())
