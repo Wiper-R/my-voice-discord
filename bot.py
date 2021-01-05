@@ -61,4 +61,5 @@ bot.load_extension('jishaku')
 async def on_ready():
     print('Bot is Ready')
 
-bot.run(config.DISCORD_BOT_TOKEN)
+if __name__ == '__main__':
+    bot.run(config.DISCORD_BOT_TOKEN)
