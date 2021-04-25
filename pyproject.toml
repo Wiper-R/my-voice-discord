@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "My Voice Discord"
+version = "0.1.0"
+description = ""
+authors = ["Wiper-R <rshivang12345@gmail.com>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+tortoise-orm = "^0.17.2"
+asyncpg = "^0.22.0"
+discord = "^1.0.1"
+aerich = "^0.5.3"
+discord-ext-menus = {git = "https://github.com/Rapptz/discord-ext-menus"}
+click = "^7.1.2"
+jishaku = "^1.20.0"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
