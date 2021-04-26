@@ -1,3 +1,10 @@
+from discord.ext.commands.errors import (
+    BadArgument,
+    BotMissingPermissions,
+    MissingPermissions,
+    MissingRequiredArgument,
+    NoPrivateMessage,
+)
 from utils.errors import MyVoiceError
 import discord
 from discord.ext import commands
@@ -20,8 +27,20 @@ class MyVoice(commands.Bot):
         print(f"Logged in as: {self.user}")
 
     async def on_command_error(self, ctx, error):
+        sendable = (
+            MyVoiceError,
+            BadArgument,
+            NoPrivateMessage,
+            MissingPermissions,
+            MissingRequiredArgument,
+            BotMissingPermissions,
+        )
+        ignorable = ()  # In Development we will not ignore any errors
 
-        if isinstance(error, MyVoiceError):
+        if isinstance(error, sendable):
             return await ctx.send(error)
+
+        if isinstance(error, ignorable):
+            return
 
         raise error
