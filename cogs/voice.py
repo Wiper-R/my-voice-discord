@@ -1,6 +1,8 @@
 import typing
 import discord
 import asyncio
+
+from discord.ext.commands.errors import NoPrivateMessage
 from utils.errors import MyVoiceError
 from discord.ext import commands
 from models.guild import VoiceConfig
@@ -8,6 +10,7 @@ from models.types import VoiceType
 from models.member import MemberConfig
 from models.voice import VoiceChannels
 from utils.checks import primary_check
+from discord.ext.commands import bot_has_guild_permissions, has_guild_permissions
 
 
 def setup(bot):
@@ -17,6 +20,19 @@ def setup(bot):
 class VoiceCog(commands.Cog, name="Voice"):
     def __init__(self, bot):
         self.bot = bot
+
+    async def cog_before_invoke(self, ctx):
+        if ctx.author.voice:
+            vc = await VoiceChannels.filter(id=ctx.author.voice.channel.id).first()
+        else:
+            vc = None
+
+        ctx.vc = vc
+
+    async def cog_check(self, ctx):
+        if not ctx.guild:
+            raise NoPrivateMessage("These commands can't be used in DMs.")
+        return True
 
     async def fetch_member_config(self, member):
         record = await MemberConfig.filter(id=member.id).first()
@@ -31,7 +47,10 @@ class VoiceCog(commands.Cog, name="Voice"):
         pass
 
     @voice.group(invoke_without_command=True)
+    @has_guild_permissions(manage_channels=True)
+    @bot_has_guild_permissions(manage_channels=True)
     async def setup(self, ctx: commands.Context):
+        """Setups a normal 'Join To Create' channel which can be modified by its owner."""
         guild: discord.Guild = ctx.guild
         if ctx.invoked_subcommand is None:
             category = await guild.create_category(name="Voice Channels")
@@ -40,7 +59,16 @@ class VoiceCog(commands.Cog, name="Voice"):
             return await ctx.send("**Successfully created a channel. You can now rename it or do what ever you want.**")
 
     @setup.command()
+    @has_guild_permissions(manage_channels=True)
+    @bot_has_guild_permissions(manage_channels=True)
     async def sequence(self, ctx: commands.Context):
+        """
+        Setups a sequential 'Join To Create' channel, that can be modified by its owner but with some restrictions.
+
+        **__Ex.__**
+        Gaming #1
+        Gaming #2
+        """
         guild: discord.Guild = ctx.guild
         try:
             await ctx.send("**Enter the default name of channels getting created (Ex. Gaming Channel)**")
@@ -80,7 +108,16 @@ class VoiceCog(commands.Cog, name="Voice"):
             return await ctx.send("**Successfully created a channel. You can now rename it or do what ever you want.**")
 
     @setup.command()
+    @has_guild_permissions(manage_channels=True)
+    @bot_has_guild_permissions(manage_channels=True)
     async def clone(self, ctx: commands.Context):
+        """
+        Setups a clone channel, which is cloned when a user joins it, everything can be modified in that channel except name and user limit.
+
+        __**Ex**__: `"Channel Name :- PUBG"`, Will create channels as...
+        [PUBG] User1
+        [PUBG] User2
+        """
         guild: discord.Guild = ctx.guild
         category = await guild.create_category(name="Voice Channels")
         channel = await category.create_voice_channel(name="Join To Create")
@@ -90,6 +127,8 @@ class VoiceCog(commands.Cog, name="Voice"):
         )
 
     @setup.command()
+    @has_guild_permissions(manage_channels=True)
+    @bot_has_guild_permissions(manage_channels=True)
     async def predefined(self, ctx: commands.Context):
         guild: discord.Guild = ctx.guild
         try:
@@ -129,7 +168,9 @@ class VoiceCog(commands.Cog, name="Voice"):
 
     @voice.command()
     @primary_check()
+    @bot_has_guild_permissions(manage_channels=True)
     async def name(self, ctx: commands.Context, *, new_name: str):
+        """Changes the name of temporary voice channel."""
         if ctx.vc.type != VoiceType.normal:
             return await ctx.send("You can't edit the name this channel.")
 
@@ -144,7 +185,9 @@ class VoiceCog(commands.Cog, name="Voice"):
 
     @voice.command()
     @primary_check()
+    @bot_has_guild_permissions(manage_channels=True)
     async def limit(self, ctx: commands.Context, *, new_limit: int):
+        """Changes the limit of temporary voice channel."""
         if ctx.vc.type == VoiceType.cloned:
             return await ctx.send("You can't edit the limit of this channel.")
 
@@ -159,7 +202,9 @@ class VoiceCog(commands.Cog, name="Voice"):
 
     @voice.command()
     @primary_check()
+    @bot_has_guild_permissions(manage_channels=True)
     async def bitrate(self, ctx: commands.Context, *, bitrate: int):
+        """Changes the bitrate of a voice channel."""
         guild = ctx.guild
 
         if bitrate < 8 or bitrate > guild.bitrate_limit:
@@ -173,7 +218,9 @@ class VoiceCog(commands.Cog, name="Voice"):
 
     @voice.command()
     @primary_check()
+    @bot_has_guild_permissions(manage_channels=True)
     async def lock(self, ctx: commands.Context):
+        """Locks a voice channel for everyone."""
         channel = ctx.author.voice.channel
         overwrite = channel.overwrites_for(ctx.guild.default_role)
 
@@ -187,7 +234,9 @@ class VoiceCog(commands.Cog, name="Voice"):
 
     @voice.command()
     @primary_check()
+    @bot_has_guild_permissions(manage_channels=True)
     async def unlock(self, ctx: commands.Context):
+        """Unlocks a voice channel for everyone."""
         channel = ctx.author.voice.channel
         role = ctx.guild.default_role
         overwrite = channel.overwrites_for(role)
@@ -202,7 +251,9 @@ class VoiceCog(commands.Cog, name="Voice"):
 
     @voice.command()
     @primary_check()
+    @bot_has_guild_permissions(manage_channels=True)
     async def ghost(self, ctx: commands.Context):
+        """Hides a voice channel from everyone."""
         channel = ctx.author.voice.channel
         role = ctx.guild.default_role
         overwrite = channel.overwrites_for(role)
@@ -216,7 +267,9 @@ class VoiceCog(commands.Cog, name="Voice"):
 
     @voice.command()
     @primary_check()
+    @bot_has_guild_permissions(manage_channels=True)
     async def unghost(self, ctx: commands.Context):
+        """Unhides a voice channel from everyone."""
         channel = ctx.author.voice.channel
         role = ctx.guild.default_role
         overwrite = channel.overwrites_for(role)
@@ -229,7 +282,9 @@ class VoiceCog(commands.Cog, name="Voice"):
 
     @voice.command()
     @primary_check()
+    @bot_has_guild_permissions(manage_channels=True)
     async def ghostmen(self, ctx: commands.Context, member_or_role: typing.Union[discord.Member, discord.Role]):
+        """Permit a user to see a hidden voice channel."""
         channel = ctx.author.voice.channel
         overwrite = channel.overwrites_for(member_or_role)
         if overwrite.read_messages is True:
@@ -243,7 +298,9 @@ class VoiceCog(commands.Cog, name="Voice"):
 
     @voice.command()
     @primary_check()
+    @bot_has_guild_permissions(manage_channels=True)
     async def permit(self, ctx: commands.Context, member_or_role: typing.Union[discord.Member, discord.Role]):
+        """Permits a user to join a locked voice channel."""
         channel = ctx.author.voice.channel
         overwrite = channel.overwrites_for(member_or_role)
         if overwrite.connect is True:
@@ -258,19 +315,23 @@ class VoiceCog(commands.Cog, name="Voice"):
 
     @voice.command()
     @primary_check()
+    @bot_has_guild_permissions(manage_channels=True)
     async def reject(self, ctx: commands.Context, member_or_role: typing.Union[discord.Member, discord.Role]):
+        """Kicks user from a voice channel and disallows him to join that again."""
         channel = ctx.author.voice.channel
         overwrite = channel.overwrites_for(member_or_role)
         if overwrite.connect is False:
-            return await ctx.send(f"{ctx.author.mention} {member_or_role} has no access to your channel :x:.")
+            return await ctx.send(f"{ctx.author.mention} {member_or_role} has no access to your channel! ❌")
         overwrite.connect = False
         await channel.set_permissions(member_or_role, overwrite=overwrite)
         await ctx.channel.send(
-            f"{ctx.author.mention} You have rejected {member_or_role.name} to have access to the channel. :x:"
+            f"{ctx.author.mention} You have rejected {member_or_role.name} to have access to the channel! ❌"
         )
 
     @voice.command()
     async def claim(self, ctx):
+        """What if actual owner of voice channel lefts?
+        No worries you can claim it and make it yours."""
         if ctx.author.voice is None:
             return await ctx.send("You are not in any voice channel.")
 
@@ -295,11 +356,14 @@ class VoiceCog(commands.Cog, name="Voice"):
 
     @voice.command()
     @primary_check()
+    @bot_has_guild_permissions(manage_channels=True)
     async def game(self, ctx: commands.Context):
+        """Changes voice channel name to your currently playing game name."""
         if ctx.vc.type != VoiceType.normal:
             return await ctx.send("You can't edit the name this channel.")
 
         activity = ctx.author.activity
+
         if activity is None or not activity.type == discord.ActivityType.playing:
             return await ctx.send("Looks like you aren't playing any game.")
 
@@ -314,6 +378,7 @@ class VoiceCog(commands.Cog, name="Voice"):
     @voice.command()
     @primary_check()
     async def transfer(self, ctx, member: discord.Member):
+        """Transfers voice channel ownership to someone else."""
         """You must own a channel and targeted member should be in that voice channel."""
         if ctx.author == member:
             return await ctx.send("You already own that channel.")
