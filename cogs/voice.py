@@ -18,6 +18,14 @@ class VoiceCog(commands.Cog, name="Voice"):
     def __init__(self, bot):
         self.bot = bot
 
+    async def cog_before_invoke(self, ctx):
+        if ctx.author.voice:
+            vc = await VoiceChannels.filter(id=ctx.author.voice.channel.id).first()
+        else:
+            vc = None
+
+        ctx.vc = vc
+
     async def fetch_member_config(self, member):
         record = await MemberConfig.filter(id=member.id).first()
 
