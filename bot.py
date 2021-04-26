@@ -1,3 +1,7 @@
+import cogs
+from cogs.help import MyHelpCommand
+from discord.ext import commands
+from utils.errors import MyVoiceError
 from discord.ext.commands.errors import (
     BadArgument,
     BotMissingPermissions,
@@ -5,15 +9,11 @@ from discord.ext.commands.errors import (
     MissingRequiredArgument,
     NoPrivateMessage,
 )
-from utils.errors import MyVoiceError
-import discord
-from discord.ext import commands
-import cogs
 
 
 class MyVoice(commands.Bot):
     def __init__(self, **kwargs):
-        super().__init__(command_prefix=self.get_prefix, **kwargs)
+        super().__init__(command_prefix=self.get_prefix, help_command=MyHelpCommand(), **kwargs)
 
         for val in cogs.values:
             self.load_extension(val)
