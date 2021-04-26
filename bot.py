@@ -37,7 +37,11 @@ class MyVoice(commands.Bot):
             BotMissingPermissions,
             CommandOnCooldown,
         )
+
         ignorable = ()  # In Development we will not ignore any errors
+
+        if isinstance(error, MyVoiceError) and ctx.command is not None:
+            ctx.command.reset_cooldown(ctx)
 
         if isinstance(error, sendable):
             return await ctx.send(error)
