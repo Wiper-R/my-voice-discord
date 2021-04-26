@@ -24,6 +24,8 @@ default_help = """
 `{prefix}voice transfer`
 ***Setup Commands***
 `{prefix}voice setup`
+`{prefix}voice setup clone`
+`{prefix}voice setup sequence`
 `{prefix}voice setup predefined`
 """
 
