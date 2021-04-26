@@ -5,6 +5,7 @@ from utils.errors import MyVoiceError
 from discord.ext.commands.errors import (
     BadArgument,
     BotMissingPermissions,
+    CommandOnCooldown,
     MissingPermissions,
     MissingRequiredArgument,
     NoPrivateMessage,
@@ -34,6 +35,7 @@ class MyVoice(commands.Bot):
             MissingPermissions,
             MissingRequiredArgument,
             BotMissingPermissions,
+            CommandOnCooldown,
         )
         ignorable = ()  # In Development we will not ignore any errors
 
