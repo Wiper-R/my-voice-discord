@@ -5,6 +5,7 @@ from utils.errors import MyVoiceError
 from discord.ext.commands.errors import (
     BadArgument,
     BotMissingPermissions,
+    CommandOnCooldown,
     MissingPermissions,
     MissingRequiredArgument,
     NoPrivateMessage,
@@ -34,8 +35,13 @@ class MyVoice(commands.Bot):
             MissingPermissions,
             MissingRequiredArgument,
             BotMissingPermissions,
+            CommandOnCooldown,
         )
+
         ignorable = ()  # In Development we will not ignore any errors
+
+        if isinstance(error, MyVoiceError) and ctx.command is not None:
+            ctx.command.reset_cooldown(ctx)
 
         if isinstance(error, sendable):
             return await ctx.send(error)
