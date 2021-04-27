@@ -19,5 +19,5 @@ class General(commands.Cog):
 
     @commands.command()
     async def uptime(self, ctx: commands.Context):
-        humanized = humanize.naturaldelta(datetime.utcnow() - self.bot.uptime)
+        humanized = humanize.precisedelta(datetime.utcnow() - self.bot.uptime, format="%0.0f")
         return await ctx.send(f"Uptime: **{humanized}**")
