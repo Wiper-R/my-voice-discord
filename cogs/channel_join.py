@@ -50,20 +50,21 @@ class ChannelJoinEvents(commands.Cog):
             playing = "nothing"
 
         memberconfig = await self.voice_cog.fetch_member_config(member)
-        channel = await member.guild.create_voice_channel(
+        channel = self.bot.get_channel(config.channel_id)
+        created = await member.guild.create_voice_channel(
             name=config.name.format(username=member.name, game=playing)[:100],
             user_limit=config.limit,
             bitrate=min(memberconfig.bitrate, member.guild.bitrate_limit),
+            category=channel.category,
         )
 
         await VoiceChannels.create(
-            id=channel.id,
+            id=created.id,
             owner_id=member.id,
             type=VoiceType.predefined,
-            category=self.bot.get_channel(config.channel_id).category,
             channel_id=channel.id,
         )
-        await member.move_to(channel)
+        await member.move_to(created)
 
     @commands.Cog.listener()
     async def on_cloned_channel_join(self, member: discord.Member, config: VoiceConfig):
