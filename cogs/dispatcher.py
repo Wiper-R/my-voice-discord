@@ -1,9 +1,12 @@
+import functools
 import discord
 import datetime
 from discord.ext import commands
 from models.guild import VoiceConfig
 from models.voice import VoiceChannels
 from discord.ext import tasks
+import asyncio
+from utils.functions import aenumerate
 
 
 def setup(bot):
@@ -79,22 +82,24 @@ class Dispatcher(commands.Cog):
             if channel is None or len(channel.members) == 0:
                 self.bot.dispatch(f"{voice.type.value}_channel_left", voice)
 
+        for chan_id, task in self.pending_tasks.copy().items():
+            if task.done:
+                del self.pending_tasks[chan_id]
+
     @cleaner.before_loop
     async def before_cleaner(self):
         await self.bot.wait_until_ready()
 
     async def update_sequential_channels(self, channel_id):
         config = await VoiceConfig.filter(channel_id=channel_id).first()
-        counter = 1
-        async for channel in VoiceChannels.filter(channel_id=channel_id).order_by("sequence"):
-            if channel.sequence != counter:
-                channel.sequence = counter
+
+        async for idx, channel in aenumerate(VoiceChannels.filter(channel_id=channel_id).order_by("sequence"), 1):
+            if channel.sequence != idx:
+                channel.sequence = idx
                 await channel.save()
 
                 if self.bot.get_channel(channel.id) is not None:
-                    await self.bot.get_channel(channel.id).edit(name=f"{config.name} #{counter}"[:100])
-
-            counter += 1
+                    await self.bot.get_channel(channel.id).edit(name=f"{config.name} #{idx}"[:100])
 
     def _do_resequence(self, channel_id):
         if task := self.pending_tasks.get(channel_id):
@@ -102,3 +107,9 @@ class Dispatcher(commands.Cog):
                 task.cancel()
 
         self.pending_tasks[channel_id] = self.bot.loop.create_task(self.update_sequential_channels(channel_id))
+
+    @commands.Cog.listener()
+    async def on_guild_channel_delete(self, channel: discord.TextChannel):
+        config = await VoiceConfig.filter(channel_id=channel.id).first()
+        if config is not None:
+            await config.delete()
