@@ -94,7 +94,7 @@ class VoiceCog(commands.Cog, name="Voice"):
                         check=lambda msg: msg.author.id == ctx.author.id
                         and msg.channel.id == ctx.channel.id
                         and msg.content.isdigit()
-                        and safe_int(msg.content, 100) < 99,
+                        and -1 < safe_int(msg.content, -1) < 100,
                         timeout=60,
                     )
                 ).content
@@ -152,7 +152,7 @@ class VoiceCog(commands.Cog, name="Voice"):
                         check=lambda msg: msg.channel == ctx.channel
                         and msg.author == ctx.author
                         and msg.content.isdigit()
-                        and safe_int(msg.content, 100) < 99,
+                        and -1 < safe_int(msg.content, -1) < 100,
                         timeout=60,
                     )
                 ).content
