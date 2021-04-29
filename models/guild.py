@@ -13,3 +13,11 @@ class VoiceConfig(models.Model):
     name = fields.CharField(max_length=100, null=True)
     limit = fields.IntField(default=0)
     type = fields.CharEnumField(VoiceType, default=VoiceType.normal)
+
+
+class GuildConfig(models.Model):
+    class Meta:
+        table = "guild_config"
+
+    id = fields.BigIntField(pk=True)
+    prefix = fields.CharField(max_length=3)
