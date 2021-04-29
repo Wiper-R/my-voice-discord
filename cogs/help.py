@@ -1,5 +1,4 @@
 from discord.ext import commands
-import random
 import discord
 
 
@@ -22,11 +21,16 @@ default_help = """
 `{prefix}voice limit`
 `{prefix}voice claim`
 `{prefix}voice transfer`
+
 ***Setup Commands***
 `{prefix}voice setup`
 `{prefix}voice setup clone`
 `{prefix}voice setup sequence`
 `{prefix}voice setup predefined`
+
+***General Commands***
+`{prefix}ping`
+`{prefix}uptime`
 """
 
 

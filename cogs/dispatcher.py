@@ -59,7 +59,7 @@ class Dispatcher(commands.Cog):
             return await member.send(message)
 
         # Putting User on Cooldown
-        self._do_cooldown(member, 5)
+        self._do_cooldown(member, 20)
 
         self.bot.dispatch(f"{config.type.value}_channel_join", member, config)
 

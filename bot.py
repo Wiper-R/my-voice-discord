@@ -1,3 +1,4 @@
+from models.guild import GuildConfig
 import cogs
 from cogs.help import MyHelpCommand
 from discord.ext import commands
@@ -10,6 +11,7 @@ from discord.ext.commands.errors import (
     MissingRequiredArgument,
     NoPrivateMessage,
 )
+import itertools
 
 
 class MyVoice(commands.Bot):
