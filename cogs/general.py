@@ -26,7 +26,7 @@ class General(commands.Cog):
 
     @commands.command()
     async def invite(self, ctx: commands.Context):
-        embed = discord.Embed(color=discord.Color.blurple())
+        embed = discord.Embed(title="Thanks for choosing me.", color=discord.Color.blurple())
         embed.description = f"[Click here]({self.bot.invite_url}) to invite the bot."
         await ctx.send(embed=embed)
 
