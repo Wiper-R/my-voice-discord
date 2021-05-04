@@ -1,5 +1,5 @@
-from models.guild import GuildConfig
 import cogs
+import discord
 from cogs.help import MyHelpCommand
 from discord.ext import commands
 from utils.errors import MyVoiceError
@@ -51,3 +51,17 @@ class MyVoice(commands.Bot):
             return
 
         raise error
+
+    @property
+    def invite_url(self):
+        return discord.utils.oauth_url(
+            self.bot.user.id,
+            discord.Permissions(
+                manage_channels=True,
+                manage_roles=True,
+                read_messages=True,
+                send_messages=True,
+                add_reactions=True,
+                move_members=True,
+            ),
+        )

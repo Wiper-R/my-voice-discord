@@ -71,7 +71,7 @@ class MyHelpCommand(commands.HelpCommand):
             else:
                 count += 1
         description = f"""
-        [Invite me to your server](https://discord.com/oauth2/authorize?client_id={self.context.bot.user.id}&permissions=300960849&scope=bot)
+        [Invite me to your server]({bot.invite_url})
         I'm here to create temporary voice channels and delete them when they are empty.
         **Commands - {count}**
         {default_help.format(prefix=self.context.prefix)}

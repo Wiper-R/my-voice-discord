@@ -26,19 +26,8 @@ class General(commands.Cog):
 
     @commands.command()
     async def invite(self, ctx: commands.Context):
-        invite_url = discord.utils.oauth_url(
-            self.bot.user.id,
-            discord.Permissions(
-                manage_channels=True,
-                manage_roles=True,
-                read_messages=True,
-                send_messages=True,
-                add_reactions=True,
-                move_members=True,
-            ),
-        )
         embed = discord.Embed(color=discord.Color.blurple())
-        embed.description = f"[Click here]({invite_url}) to invite the bot."
+        embed.description = f"[Click here]({self.bot.invite_url}) to invite the bot."
         await ctx.send(embed=embed)
 
     @commands.command()
