@@ -11,7 +11,6 @@ from discord.ext.commands.errors import (
     MissingRequiredArgument,
     NoPrivateMessage,
 )
-import itertools
 
 
 class MyVoice(commands.Bot):

@@ -1,6 +1,8 @@
+import inspect, os
+import humanize
+import discord
 from discord.ext import commands
 from datetime import datetime
-import humanize
 
 
 def setup(bot):
@@ -8,7 +10,7 @@ def setup(bot):
 
 
 class General(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
         if not hasattr(self.bot, "uptime"):
             self.bot.uptime = datetime.utcnow()
@@ -21,3 +23,51 @@ class General(commands.Cog):
     async def uptime(self, ctx: commands.Context):
         humanized = humanize.precisedelta(datetime.utcnow() - self.bot.uptime, format="%0.0f")
         return await ctx.send(f"Uptime: **{humanized}**")
+
+    @commands.command()
+    async def invite(self, ctx: commands.Context):
+        invite_url = discord.utils.oauth_url(
+            self.bot.user.id,
+            discord.Permissions(
+                manage_channels=True,
+                manage_roles=True,
+                read_messages=True,
+                send_messages=True,
+                add_reactions=True,
+                move_members=True,
+            ),
+        )
+        embed = discord.Embed(color=discord.Color.blurple())
+        embed.description = f"[Click here]({invite_url}) to invite the bot."
+        await ctx.send(embed=embed)
+
+    @commands.command()
+    async def support(self, ctx: commands.Context):
+        invite = "https://discord.gg/4dFZjwr73n"
+        embed = discord.Embed(
+            title="Need Help?",
+            color=discord.Color.blurple(),
+        )
+        embed.description = f"[Click here]({invite}) to join the support server."
+        await ctx.send(embed=embed)
+
+    @commands.command()
+    async def source(self, ctx: commands.Context, *, search: str = None):
+        source_url = "https://github.com/Wiper-R/my-voice-discord"
+
+        if search is None:
+            return await ctx.send(source_url)
+
+        command = self.bot.get_command(search)
+
+        if not command:
+            return await ctx.send("Couldn't find that command.")
+
+        src = command.callback.__code__
+        filename = src.co_filename
+        lines, firstlineno = inspect.getsourcelines(src)
+
+        location = os.path.relpath(filename).replace("\\", "/")
+
+        final_url = f"<{source_url}/blob/master/{location}#L{firstlineno}-L{firstlineno + len(lines) - 1}>"
+        await ctx.send(final_url)

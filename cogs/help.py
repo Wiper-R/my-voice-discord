@@ -31,6 +31,9 @@ default_help = """
 ***General Commands***
 `{prefix}ping`
 `{prefix}uptime`
+`{prefix}invite`
+`{prefix}support`
+`{prefix}source [command]`
 """
 
 

@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "My Voice Discord"
+name = "my_voice_discord"
 version = "0.1.0"
 description = ""
 authors = ["Wiper-R <rshivang12345@gmail.com>"]
@@ -23,3 +23,6 @@ black = {version = "^21.4b0", allow-prereleases = true}
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+bot = "my_voice_discord.launcher:main"
