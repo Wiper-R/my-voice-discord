@@ -1,5 +1,0 @@
-{
-  "name" : "my-voice",
-  "script" : "./launcher.py",
-  "interpreter": "./.venv/Scripts/python"
-}
