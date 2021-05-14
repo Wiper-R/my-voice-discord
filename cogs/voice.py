@@ -327,7 +327,7 @@ class VoiceCog(commands.Cog, name="Voice"):
         await channel.set_permissions(member_or_role, overwrite=overwrite)
         await ctx.send(f"{ctx.author.mention} You have permited {member_or_role.name} to view your channel. ✅")
 
-    @voice.command()
+    @voice.command(aliases=("allow",))
     @primary_check()
     @bot_has_guild_permissions(manage_channels=True)
     @commands.cooldown(1, 30, BucketType.user)
@@ -343,7 +343,7 @@ class VoiceCog(commands.Cog, name="Voice"):
             f"{ctx.author.mention} You have permitted {member_or_role.name} to have access to the channel. ✅"
         )
 
-    @voice.command()
+    @voice.command(aliases=("deny",))
     @primary_check()
     @bot_has_guild_permissions(manage_channels=True)
     @commands.cooldown(1, 30, BucketType.user)
