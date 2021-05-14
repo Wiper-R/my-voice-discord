@@ -22,7 +22,9 @@ default_help = """
 `{prefix}voice claim`
 `{prefix}voice transfer`
 `{prefix}voice ban`
+`{prefix}voice unban`
 `{prefix}voice block`
+`{prefix}voice unblock`
 
 ***Setup Commands***
 `{prefix}setprefix`
