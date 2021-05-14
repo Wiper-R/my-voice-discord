@@ -10,7 +10,7 @@ from models import VoiceConfig, VoiceType, MemberConfig, VoiceChannels, GuildCon
 from utils.checks import primary_check
 from discord.ext.commands import bot_has_guild_permissions, has_guild_permissions
 from discord.ext.commands.cooldowns import BucketType
-from models.functions import ArrayAppend
+from models.functions import ArrayAppend, ArrayRemove
 
 
 def setup(bot):
@@ -46,7 +46,7 @@ class VoiceCog(commands.Cog, name="Voice"):
         except DoesNotExist:
             return await GuildConfig.create(id=guild.id)
 
-    @commands.group(invoke_without_command=False)
+    @commands.group()
     async def voice(self, ctx: commands.Context):
         pass
 
@@ -366,7 +366,6 @@ class VoiceCog(commands.Cog, name="Voice"):
             for member in channel.members:
                 if role in member.roles and member != ctx.author:
                     await member.move_to(None)
-
         else:
             member = member_or_role
             if member in channel.members:
@@ -399,7 +398,7 @@ class VoiceCog(commands.Cog, name="Voice"):
 
         vc.owner_id = ctx.author.id
         await vc.save()
-        await ctx.send("Successfully transferred channel ownership to you.")
+        await ctx.send("You are the new owner of this voice channel.")
 
     @voice.command()
     @primary_check()
@@ -442,24 +441,36 @@ class VoiceCog(commands.Cog, name="Voice"):
 
         ctx.vc.owner_id = member.id
         await ctx.vc.save()
-        await ctx.send(f"Successfully transferred channel ownership to {member}.")
+        await ctx.send(f"You've transferred channel ownership to {member}.")
 
     @voice.command()
     @commands.has_guild_permissions(manage_channels=True, manage_roles=True)
     async def ban(self, ctx: commands.Context, member: discord.Member):
-        """Bans a member from creating `Join to Create` channel in your server."""
+        """Bans a member from creating `Join to Create` channels."""
         guild_config = await self.fetch_guild_config(ctx.guild)
 
         if member.id in guild_config.banned_members:
             raise MyVoiceError(f"{member} is already banned from using JTC channels.")
 
         await GuildConfig.filter(id=ctx.guild.id).update(banned_members=ArrayAppend("banned_members", member.id))
-        await ctx.send(f"Successfully banned {member} from using JTC channels.")
+        await ctx.send(f"You banned {member} from creating JTC channels.")
+
+    @voice.command()
+    @commands.has_guild_permissions(manage_channels=True, manage_roles=True)
+    async def unban(self, ctx: commands.Context, member: discord.Member):
+        """Allows a member to create `Join to Create` channel in your server."""
+        guild_config = await self.fetch_guild_config(ctx.guild)
+
+        if member.id not in guild_config.banned_members:
+            raise MyVoiceError(f"{member} is not banned from using JTC channels.")
+
+        await GuildConfig.filter(id=ctx.guild.id).update(banned_members=ArrayRemove("banned_members", member.id))
+        await ctx.send(f"You unbanned {member} from creating JTC channels.")
 
     @voice.command()
     @commands.cooldown(1, 30, BucketType.user)
     async def block(self, ctx: commands.Context, member: discord.Member):
-        """Permanently blocks a user from joining your voice channel."""
+        """Permanently blocks a user to join your voice channel."""
 
         if member == ctx.author:
             raise MyVoiceError("You can't block yourself.")
@@ -467,7 +478,23 @@ class VoiceCog(commands.Cog, name="Voice"):
         member_config = await self.fetch_member_config(ctx.author)
 
         if member.id in member_config.blocked_users:
-            raise MyVoiceError(f"{member} is already blocked to join your voice channels.")
+            raise MyVoiceError(f"{member} is already blocked from joining your voice channels.")
 
         await MemberConfig.filter(id=ctx.author.id).update(blocked_users=ArrayAppend("blocked_users", member.id))
-        await ctx.send(f"Successfully blocked {member} to join your voice channels.")
+        await ctx.send(f"You blocked {member} from joining your voice channels.")
+
+    @voice.command()
+    @commands.cooldown(1, 30, BucketType.user)
+    async def unblock(self, ctx: commands.Context, member: discord.Member):
+        """Unblocks a user to join your voice channel."""
+
+        if member == ctx.author:
+            raise MyVoiceError("You can't block yourself.")
+
+        member_config = await self.fetch_member_config(ctx.author)
+
+        if member.id not in member_config.blocked_users:
+            raise MyVoiceError(f"{member} is not blocked from joining your voice channels.")
+
+        await MemberConfig.filter(id=ctx.author.id).update(blocked_users=ArrayRemove("blocked_users", member.id))
+        await ctx.send(f"You unblocked {member} from joining your voice channel.")
